@@ -1,0 +1,15 @@
+version: "3.8"
+
+services:
+  bot:
+    container_name: bot
+    tty: true
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./src
+          target: /app/src
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - 18080:3000

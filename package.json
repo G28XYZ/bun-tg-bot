@@ -1,0 +1,15 @@
+{
+    "name": "bun-tg-bot",
+    "version": "1.0.0",
+    "main": "index.ts",
+    "scripts": {
+        "start:docker": "npm run docker-compose:build",
+        "docker-compose:build": "docker-compose -f docker-compose.yml up --build"
+    },
+    "author": "",
+    "license": "ISC",
+    "description": "",
+    "devDependencies": {
+        "@types/bun": "^1.1.17"
+    }
+}

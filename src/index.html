@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bun tg bot</title>
+</head>
+<body>
+    <h1>Hello Bun</h1>
+    <div class="message"></div>
+    <script>
+        console.log('Hello bun')
+        const socket = new WebSocket("ws://localhost:18080");
+        socket.addEventListener("message", event => {
+            console.log(event.data);
+            document.querySelector('.message').textContent = event.data
+        });
+    </script>
+</body>
+</html>
