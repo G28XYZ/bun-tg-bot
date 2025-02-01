@@ -1,15 +1,14 @@
-import { BunBotApi } from './tg-bot-api';
-import path  from 'path';
+import { Bot } from 'grammy';
+import path from 'path';
 
 const botToken = '6628056195:AAGtIwxg-BhEQAiSglM-HMV-Yg1LAYtokO8';
 
-const bot = new BunBotApi(botToken);
+const bot = new Bot(botToken);
 
 const server = Bun.serve({
     port: 3000,
     async fetch(req, serv) {
         serv.upgrade(req, {
-            // this object must conform to WebSocketData
             data: {
                 createdAt: Date.now(),
                 channelId: new URL(req.url).searchParams.get("channelId"),
@@ -27,10 +26,9 @@ const server = Bun.serve({
         },
         open(ws) {
             console.log('ws open');
-            bot.on('/start', (message) => {
-                ws.send(JSON.stringify(message));
-                bot.sendMessage({ chat_id: message.chat.id, text: 'Hello'})
-            })
+            bot.on('message', (...args) => {
+							ws.send(JSON.stringify(args));
+						})
         },
         close(ws, code, message) {
             console.log('ws close');
@@ -38,4 +36,8 @@ const server = Bun.serve({
       },
 });
 
-console.log(`Listening on localhost:${server.port}`);
+bot.on('message', (...args) => {
+	console.log(args);
+})
+
+console.log(`Start localhost:${server.port}`);

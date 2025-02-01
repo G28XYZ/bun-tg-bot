@@ -11,5 +11,8 @@
     "description": "",
     "devDependencies": {
         "@types/bun": "^1.1.17"
+    },
+    "dependencies": {
+        "grammy": "^1.34.1"
     }
 }
