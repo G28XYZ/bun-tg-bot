@@ -1,3 +1,4 @@
+import { startBot } from './bot';
 import { Bot, Context } from 'grammy';
 import path from 'path';
 
@@ -83,10 +84,6 @@ const server = Bun.serve({
       },
 });
 
-bot.command('start', (ctx) => {
-    ctx.reply("Привет! Спроси что интересует, бот попробует ответить.");
-})
-
-bot.start();
+startBot(bot);
 
 console.log(`Start http://localhost:${server.port}`);
