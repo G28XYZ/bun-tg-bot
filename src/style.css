@@ -1,0 +1,248 @@
+*::-webkit-scrollbar {
+    width: 6px;
+}
+
+*::-webkit-scrollbar-track {
+    background: rgba(40, 40, 40, 0.5);
+    border-radius: 5px;
+}
+
+*::-webkit-scrollbar-track:hover {
+    background: rgb(40 40 40);
+    border-radius: 5px;
+}
+
+*::-webkit-scrollbar-thumb {
+    background: rgb(118 140 158);
+    border-radius: 5px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: rgb(118 140 158);
+    border-radius: 5px;
+}
+
+*::-webkit-scrollbar-thumb:active {
+    background: rgb(118 140 158);
+    border-radius: 5px;
+}
+
+body {
+    display: grid;
+    grid-template-columns: 320px auto;
+    grid-template-rows: min-content 600px;
+    grid-template-areas:
+    "T C"
+    "M C";
+    margin: 0;
+    overflow: hidden;
+    min-height: 600px;
+}
+
+header {
+    grid-area: T;
+    height: 50px;
+    background-color: #17212b;
+    align-content: center;
+    text-align: center;
+    width: 100%;
+}
+
+header > input {
+    padding: 6px;
+    padding-left: 12px;
+    border-radius: 14px;
+    width: 80%;
+    border: none;
+    color: white;
+    background-color: #242f3d;
+}
+
+header > input:focus {
+    border: none;
+    outline: none;
+}
+
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.user {
+    position: relative;
+    align-content: center;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.user::after {
+    position: absolute;
+    content: attr(data-count);
+    color: white;
+    background-color: #4082bc;
+    border-radius: 10px;
+    align-content: center;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    vertical-align: middle;
+    right: 0;
+    bottom: 0;
+    margin: 6px;
+    font-size: 12px;
+}
+
+.user[data-count="0"]::after {
+    display: none;
+}
+  
+.user::before {
+    position: absolute;
+    content: attr(data-time);
+    color: #8696a8;
+    right: 0;
+    top: 0;
+    font-size: 12px;
+    margin: 6px;
+}
+  
+.users {
+    grid-area: M;
+    max-height: 550px;
+    overflow: auto;
+    background-color: #17212b;
+    width: 320px;
+}
+
+.user:hover {
+    background-color: rgb(31 41 54);
+}
+
+.user_selected {
+    background-color: rgb(43 82 120) !important;
+}
+
+.user_title {
+    color: white;
+    margin: 0;
+}
+
+.user_message {
+    color: #768c9e;
+    margin: 0;
+}
+
+.chat {
+    position: relative;
+    grid-area: C;
+    background-color: #0e1621;
+    border-left: 1px solid black;
+    max-height: 600px;
+}
+
+.chat_empty {
+    color: white;
+    border: 1px solid #1e2c3a;
+    border-radius: 12px;
+    background-color: #1e2c3a;
+    padding: 4px 14px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 14px;
+}
+
+.chat_container {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+.chat_header {
+    padding: 8px;
+    background-color: #17212b;
+    height: 50px;
+    box-sizing: border-box;
+}
+
+.chat_header > .user_message {
+    display: none;
+}
+
+.chat_header > img {
+    display: none;
+}
+
+.chat_messages {
+    border-bottom: 1px solid black;
+    border-top: 1px solid black;
+    flex-grow: 1;
+    overflow: auto;
+    max-height: 500px;
+    box-sizing: border-box;
+    padding: 0 20px;
+}
+
+.chat_message-user,
+.chat_message-bot {
+    position: relative;
+    color: white;
+    padding: 8px 16px;
+    padding-right: 55px;
+    background-color: #182533;
+    width: max-content;
+    border-radius: 16px;
+}
+
+.chat_message-bot {
+    background-color: #2b5278;
+    justify-self: right;
+}
+
+.chat_message-user::before,
+.chat_message-bot::before  {
+    position: absolute;
+    content: attr(data-time);
+    color: #8696a8;
+    right: 0;
+    bottom: 0;
+    font-size: 11px;
+    margin: 6px;
+}
+
+.chat_input {
+    display: flex;
+    height: 50px;
+    background-color: #17212b;
+}
+
+.chat_input > input {
+    width: 100%;
+    height: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    color: white;
+    padding: 0;
+    padding-left: 10px;
+}
+
+.chat_input > .button {
+    background-image: url(/img/send-icon.png);
+    height: 25px;
+    width: 25px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    align-self: center;
+    margin: 10px;
+    cursor: pointer;
+}
+
+img {
+    float: inline-start;
+    border-radius: 50%;
+    padding-right: 8px;
+}

@@ -1,12 +1,52 @@
-import { Bot } from 'grammy';
+import { Bot, Context } from 'grammy';
 import path from 'path';
 
-const botToken = '6628056195:AAGtIwxg-BhEQAiSglM-HMV-Yg1LAYtokO8';
+const botToken = process.env.botToken || '';
 
 const bot = new Bot(botToken);
 
+const latestMsg: Record<number, any> = {}
+
+let wsOnCallback: (ctx: ReturnType<typeof bot['on']>) => any;
+
+const loglatestMessage = (ctx: Context) => {
+    const message = ctx?.message;
+    if(message?.from?.id) {
+        latestMsg[message.from.id] = {
+            from: message.from,
+            messages:
+                latestMsg[message.from.id]?.messages
+                ? [...latestMsg[message.from.id]?.messages, message]
+                : [message]
+        }
+    }
+}
+
+bot.use((ctx, next) => {
+    loglatestMessage(ctx);
+    wsOnCallback && wsOnCallback(ctx);
+    next();
+})
+
 const server = Bun.serve({
-    port: 3000,
+    port: process.env.port || 3000,
+    static: {
+        '/index.js': new Response(await Bun.file(path.join(__dirname, "index.js")).bytes(), {
+            headers: {
+                "Content-Type": "text/javascript",
+            },
+        }),
+        '/style.css': new Response(await Bun.file(path.join(__dirname, "style.css")).bytes(), {
+        headers: {
+                "Content-Type": "text/css",
+            },
+        }),
+        '/img/send-icon.png': new Response(await Bun.file(path.join(__dirname, "img", "send-icon.png")).bytes(), {
+        headers: {
+                "Content-Type": "image/png",
+            },
+        })
+    },
     async fetch(req, serv) {
         serv.upgrade(req, {
             data: {
@@ -14,21 +54,28 @@ const server = Bun.serve({
                 channelId: new URL(req.url).searchParams.get("channelId"),
             },
         });
+
         return new Response(await Bun.file(path.join(__dirname, "index.html")).bytes(), {
             headers: {
               "Content-Type": "text/html",
             },
-          });
+        });
     },
     websocket: {
-        async message(ws, message) {
-            console.log(message);
+        async message(ws, data) {
+            if(typeof data === 'string') {
+                const message = JSON.parse(data);
+                if(message && message.text?.trim() && message.chat_id) {
+                    bot.api.sendMessage(message.chat_id,  message.text);
+                }
+            }
         },
-        open(ws) {
+        async open(ws) {
             console.log('ws open');
-            bot.on('message', (...args) => {
-							ws.send(JSON.stringify(args));
-						})
+            wsOnCallback = (ctx) => {
+                ws.send(JSON.stringify({ data: latestMsg, message: ctx.message }));
+            }
+            ws.send(JSON.stringify({ data: latestMsg }));
         },
         close(ws, code, message) {
             console.log('ws close');
@@ -36,8 +83,10 @@ const server = Bun.serve({
       },
 });
 
-bot.on('message', (...args) => {
-	console.log(args);
+bot.command('start', (ctx) => {
+    ctx.reply("Привет! Спроси что интересует, бот попробует ответить.");
 })
 
-console.log(`Start localhost:${server.port}`);
+bot.start();
+
+console.log(`Start http://localhost:${server.port}`);

@@ -3,16 +3,20 @@
     "version": "1.0.0",
     "main": "index.ts",
     "scripts": {
+        "start": "bun --watch --env-file=.env-dev ./src/index.ts",
         "start:docker": "npm run docker-compose:build",
-        "docker-compose:build": "docker-compose -f docker-compose.yml up --build"
+        "docker-compose:build": "docker-compose -f docker-compose.yml up --build",
+        "reinstall": "rimraf ./node_modules ./package-lock.json && npm i"
     },
     "author": "",
     "license": "ISC",
     "description": "",
     "devDependencies": {
-        "@types/bun": "^1.1.17"
+        "@types/bun": "^1.1.17",
+        "rimraf": "^6.0.1"
     },
     "dependencies": {
+        "bun": "^1.2.2",
         "grammy": "^1.34.1"
     }
 }

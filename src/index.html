@@ -4,17 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bun tg bot</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <h1>Hello Bun</h1>
-    <div class="message"></div>
-    <script>
-        console.log('Hello bun')
-        const socket = new WebSocket("ws://localhost:18080");
-        socket.addEventListener("message", event => {
-            console.log(event.data);
-            document.querySelector('.message').textContent = event.data
-        });
-    </script>
+    <header>
+        <input type="text" placeholder="Hello bun!">
+    </header>
+    <section class="users">
+        <ul></ul>
+    </section>
+    <section class="chat">
+        <span class="chat_empty">Выберите, кому хотели бы написать</span>
+        <div class="chat_container">
+            <div class="chat_messages"></div>
+            <div class="chat_input">
+                <input type="text" placeholder="Написать сообщение...">
+                <div class="button"></div>
+            </div>
+        </div>
+    </section>
+    <script type="module" src="/index.js"></script>
 </body>
+<template id="li-user">
+    <li class="user">
+        <img src="https://i.pravatar.cc/50" alt="avatar" loading="lazy">
+        <h3 class="user_title"></h3>
+        <p class="user_message"></p>
+    </li>
+</template>
 </html>
