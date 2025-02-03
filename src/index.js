@@ -43,7 +43,7 @@ const handleCloseChat = () => {
     chatInput.value = '';
 }
 /** обработчик открытия чата */
-const handleOpenChat = (e, from) => {
+const handleOpenChat = (e) => {
     handleCloseChat();
     openedChat = e;
     chatContainer.style.display = 'flex';
@@ -127,7 +127,7 @@ const createLiElement = (props) => {
     messageEl.dataset.time = new Date(message.date * 1000).toLocaleTimeString();
     element.querySelector('.user_title').textContent = `${from.first_name} ${from.last_name}`;
     element.querySelector('.user_message').textContent = message.text;
-    messageEl.addEventListener('click', () => handleOpenChat(messageEl, from));
+    messageEl.addEventListener('click', () => handleOpenChat(messageEl));
 
     ulElement.append(element);
 }

@@ -2,7 +2,7 @@ import { Api, Bot, Context, Keyboard, RawApi } from "grammy";
 import { appConfig } from "./";
 
 enum Message {
-    weather   = "Какая погода?",
+    other     = "Что умеешь ?",
     translate = "Переведи...",
     joke      = "Анекдот"
 }
@@ -41,13 +41,13 @@ const handleAIAnswer = (answerText: string) => {
         console.log(e);
     }
 
-    return 'Что-то пошло не так попробуйте езе раз...'
+    return 'Что-то пошло не так попробуйте еще раз...'
 }
 
 export const startBot = async (bot: Bot<Context, Api<RawApi>>) => {
 
     const keyboard = new Keyboard()
-        .text(Message.weather).row()
+        .text(Message.other).row()
         .text(Message.translate)
         .resized()
         .text(Message.joke);
@@ -59,22 +59,49 @@ export const startBot = async (bot: Bot<Context, Api<RawApi>>) => {
           });
     })
 
+    let lastCtxMessage = '';
+
     bot.on('message:text', async (ctx) => {
-        switch(ctx?.message?.text as unknown as Message) {
+        let text = <string>ctx?.message?.text
+
+        if('Вернуться к меню' === text) {
+            ctx.reply('Что интересует ?', { reply_markup: keyboard });
+            lastCtxMessage = '';
+        }
+
+        if(lastCtxMessage) {
+            switch(lastCtxMessage) {
+                case Message.other:
+                    const weather = await handleAIAnswer(await aiRequest(text));
+                    ctx.reply(weather, { reply_markup: new Keyboard().text('Вернуться к меню').resized() })
+                    return;
+                case Message.translate:
+                    const translate = await handleAIAnswer(await aiRequest(`${Message.translate} ${text}`));
+                    ctx.reply(translate, { reply_markup: keyboard });
+                    break;
+            }
+
+            lastCtxMessage = '';
+        }
+
+        switch(text) {
             case Message.joke:
-                console.log(Message.joke);
                 const jokeValue = await handleAIAnswer(await aiRequest(`${Message.joke} про ${getJoke()}`));
                 ctx.reply(jokeValue, { reply_markup: keyboard });
                 break;
-            case Message.weather:
-                // console.log(Message.weather, await aiRequest(Message.weather));
+            case Message.other:
+                lastCtxMessage = Message.other;
+                const other = await handleAIAnswer(await aiRequest(text));
+                ctx.reply(other, { reply_markup: keyboard });
                 break;
             case Message.translate:
-                // console.log(Message.translate, await aiRequest(Message.translate));
+                lastCtxMessage = Message.translate;
+                ctx.reply("Напишите сообщение которое хотите перевести и язык");
                 break;
-                
         }
+
     })
+
 
     bot.on('message:photo', (ctx) => ctx.reply('Это вы на фото ?)'));
     

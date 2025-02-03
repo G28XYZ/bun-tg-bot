@@ -1,4 +1,4 @@
-import { startBot } from './bot';
+import { startBot } from './bot.js';
 import { Bot, Context } from 'grammy';
 import path from 'path';
 
