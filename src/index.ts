@@ -2,7 +2,20 @@ import { startBot } from './bot';
 import { Bot, Context } from 'grammy';
 import path from 'path';
 
-const botToken = process.env.botToken || '';
+interface IConfigApp {
+    port          : number;
+    botToken      : string;
+    requestUrl    : string;
+    'x-project-id': string;
+    'x-request-id': string;
+    'x-sm-user-id': string;
+    'x-device-id' : string;
+    cookie        : string;
+}
+
+export const appConfig: IConfigApp = (await (await fetch(<string>process.env.configAppUrl)).json()) || {};
+
+const botToken = appConfig.botToken || '';
 
 const bot = new Bot(botToken);
 
@@ -10,7 +23,7 @@ const latestMsg: Record<number, any> = {}
 
 let wsOnCallback: (ctx: ReturnType<typeof bot['on']>) => any;
 
-const loglatestMessage = (ctx: Context) => {
+const logLatestMessage = (ctx: Context) => {
     const message = ctx?.message;
     if(message?.from?.id) {
         latestMsg[message.from.id] = {
@@ -24,13 +37,13 @@ const loglatestMessage = (ctx: Context) => {
 }
 
 bot.use((ctx, next) => {
-    loglatestMessage(ctx);
+    logLatestMessage(ctx);
     wsOnCallback && wsOnCallback(ctx);
     next();
 })
 
 const server = Bun.serve({
-    port: process.env.port || 3000,
+    port: appConfig.port || 3000,
     static: {
         '/index.js': new Response(await Bun.file(path.join(__dirname, "index.js")).bytes(), {
             headers: {

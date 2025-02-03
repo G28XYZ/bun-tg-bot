@@ -1,22 +1,23 @@
 import { Api, Bot, Context, Keyboard, RawApi } from "grammy";
+import { appConfig } from "./";
 
 enum Message {
-    weather = "Какая погода?",
-    translate = "Переведи слово...",
-    joke = "Анекдот"
+    weather   = "Какая погода?",
+    translate = "Переведи...",
+    joke      = "Анекдот"
 }
 
 const aiRequest = async (text: string) => {
     const headers = {
-        'x-device-id': process.env['x-device-id'],
-        'x-project-id': process.env['x-project-id'],
-        'x-request-id': process.env['x-request-id'],
-        'x-sm-user-id': process.env['x-sm-user-id'],
+        'x-device-id' : appConfig['x-device-id'],
+        'x-project-id': appConfig['x-project-id'],
+        'x-request-id': appConfig['x-request-id'],
+        'x-sm-user-id': appConfig['x-sm-user-id'],
+        Cookie        : appConfig.cookie,
         'Content-Type': 'application/json',
-        Cookie: process.env.cookie
-    } as any
+    }
 
-    const answer = await fetch(<string>process.env.requestUrl, { method: 'POST', headers, body: JSON.stringify({ text }) });
+    const answer = await fetch(appConfig.requestUrl, { method: 'POST', headers, body: JSON.stringify({ text }) });
 
     return await answer.text();
 }
@@ -32,16 +33,15 @@ const getJoke = () => {
     return jokeThemes[index];
 };
 
-const handleAnswer = (answerText: string) => {
+const handleAIAnswer = (answerText: string) => {
     try {
         const answer = answerText.split('\n').filter(Boolean).map(e => JSON.parse(e.replace(/\"/g, "\"").slice(5)));
-        console.log(answer);
         return Promise.resolve(answer.find(item => item.status === 'READY')?.message?.text);
     } catch(e) { 
         console.log(e);
     }
 
-    return null
+    return 'Что-то пошло не так попробуйте езе раз...'
 }
 
 export const startBot = async (bot: Bot<Context, Api<RawApi>>) => {
@@ -51,6 +51,7 @@ export const startBot = async (bot: Bot<Context, Api<RawApi>>) => {
         .text(Message.translate)
         .resized()
         .text(Message.joke);
+
     bot.command('start', (ctx) => {
     
         ctx.reply("Привет! Что интересует?", {
@@ -62,8 +63,7 @@ export const startBot = async (bot: Bot<Context, Api<RawApi>>) => {
         switch(ctx?.message?.text as unknown as Message) {
             case Message.joke:
                 console.log(Message.joke);
-                const jokeValue = await handleAnswer(await aiRequest(`${Message.joke} про ${getJoke()}`));
-                jokeValue &&
+                const jokeValue = await handleAIAnswer(await aiRequest(`${Message.joke} про ${getJoke()}`));
                 ctx.reply(jokeValue, { reply_markup: keyboard });
                 break;
             case Message.weather:
@@ -75,6 +75,8 @@ export const startBot = async (bot: Bot<Context, Api<RawApi>>) => {
                 
         }
     })
+
+    bot.on('message:photo', (ctx) => ctx.reply('Это вы на фото ?)'));
     
     bot.start();
 

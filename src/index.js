@@ -23,7 +23,7 @@ let lastMessages = {};
 /** локальные данные которые подтягиваются с локального хранилища браузера */
 const localData = new Proxy(JSON.parse(localStorage.getItem(LOCAL_STORAGE_EVENT_DATA)) || {}, {
     get(_, p, r) {
-        return Reflect.get(JSON.parse(localStorage.getItem(LOCAL_STORAGE_EVENT_DATA)), p,  r);
+        return Reflect.get(JSON.parse(localStorage.getItem(LOCAL_STORAGE_EVENT_DATA)) || {}, p,  r);
     }
 })
 
