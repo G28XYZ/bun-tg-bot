@@ -1,4 +1,4 @@
-import { Api, Bot, type Context, Keyboard, RawApi } from "grammy";
+import { Bot, type Context, Keyboard } from "grammy";
 import { appConfig } from "./";
 import { Conversation, ConversationFlavor, conversations, createConversation } from "@grammyjs/conversations";
 
@@ -68,6 +68,7 @@ export const startBot = async (bot: Bot<ConversationFlavor<Context>>) => {
             .and(
                 (ctx) => ctx.msg.text === '🔙 Назад', {
                 otherwise: async (ctx) => {
+                    await bot.api.sendChatAction(ctx.chatId, 'typing');
                     const aiAnswer = await handleAIAnswer(await aiRequest(ctx.msg.text));
                     await ctx.reply(aiAnswer, { parse_mode: 'Markdown' });
                 }
@@ -75,8 +76,16 @@ export const startBot = async (bot: Bot<ConversationFlavor<Context>>) => {
         ctx.reply('Что интересует?', { reply_markup: keyboard });
     }
 
+    async function translate(conversation: Conversation, ctx: Context) {
+        await ctx.reply("Напишите сообщение которое хотите перевести и язык");
+        const { message } = await conversation.waitFor("message:text");
+        const aiAnswer = await handleAIAnswer(await aiRequest(Message.translate + " " + message.text + ' (полный перевод и ниже транскрипция на языке котором написали вопрос)'));
+        await ctx.reply(aiAnswer, { parse_mode: 'Markdown' });
+    }
+
     bot.use(conversations());
     bot.use(createConversation(aiChat));
+    bot.use(createConversation(translate));
 
     bot.command('start', (ctx) => {
         ctx.reply("Привет! Что интересует?", { reply_markup: keyboard });
@@ -96,16 +105,18 @@ export const startBot = async (bot: Bot<ConversationFlavor<Context>>) => {
                 ctx.reply(jokeValue, { reply_markup: keyboard });
                 break;
             case Message.other:
+                await ctx.reply("Секундочку... пишу ответ :)");
+                await bot.api.sendChatAction(ctx.chatId, 'typing');
                 const aiAnswer = await handleAIAnswer(await aiRequest(Message.other));
                 if(aiAnswer !== aiErrorMessage) {
-                    ctx.reply(aiAnswer, { reply_markup: new Keyboard().text('🔙 Назад').resized(), parse_mode: 'Markdown'  });
+                    await ctx.reply(aiAnswer, { reply_markup: new Keyboard().text('🔙 Назад').resized(), parse_mode: 'Markdown'  });
                     await ctx.conversation.enter("aiChat");
                 } else {
-                    ctx.reply(aiAnswer);
+                    await ctx.reply(aiAnswer);
                 }
                 break;
             case Message.translate:
-                ctx.reply("Напишите сообщение которое хотите перевести и язык");
+                await ctx.conversation.enter("translate");
                 break;
         }
 
