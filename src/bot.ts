@@ -1,5 +1,6 @@
-import { Api, Bot, Context, Keyboard, RawApi } from "grammy";
+import { Api, Bot, type Context, Keyboard, RawApi } from "grammy";
 import { appConfig } from "./";
+import { Conversation, ConversationFlavor, conversations, createConversation } from "@grammyjs/conversations";
 
 enum Message {
     other     = "Что умеешь ?",
@@ -33,55 +34,60 @@ const getJoke = () => {
     return jokeThemes[index];
 };
 
+const aiErrorMessage = 'Что-то пошло не так попробуйте еще раз...';
+
 const handleAIAnswer = (answerText: string) => {
     try {
-        const answer = answerText.split('\n').filter(Boolean).map(e => JSON.parse(e.replace(/\"/g, "\"").slice(5)));
+        const answer =
+            answerText
+            .replace(/\n\n/g, '__SECRET_SYMBOL__')
+            .split('__SECRET_SYMBOL__')
+            .filter(e => e.startsWith('data:'))
+            .join('')
+            .split("data:")
+            .filter(Boolean)
+            .map(e => JSON.parse(e));
         return Promise.resolve(answer.find(item => item.status === 'READY')?.message?.text);
     } catch(e) { 
+        console.log(answerText);
         console.log(e);
     }
 
-    return 'Что-то пошло не так попробуйте еще раз...'
+    return aiErrorMessage;
 }
 
-export const startBot = async (bot: Bot<Context, Api<RawApi>>) => {
+export const startBot = async (bot: Bot<ConversationFlavor<Context>>) => {
 
     const keyboard = new Keyboard()
         .text(Message.other).row()
-        .text(Message.translate)
-        .resized()
+        .text(Message.translate).resized()
         .text(Message.joke);
 
+    async function aiChat(conversation: Conversation, ctx: Context) {
+        await conversation.waitFor("message:text")
+            .and(
+                (ctx) => ctx.msg.text === '🔙 Назад', {
+                otherwise: async (ctx) => {
+                    const aiAnswer = await handleAIAnswer(await aiRequest(ctx.msg.text));
+                    await ctx.reply(aiAnswer, { parse_mode: 'Markdown' });
+                }
+            });
+        ctx.reply('Что интересует?', { reply_markup: keyboard });
+    }
+
+    bot.use(conversations());
+    bot.use(createConversation(aiChat));
+
     bot.command('start', (ctx) => {
-    
-        ctx.reply("Привет! Что интересует?", {
-            reply_markup: keyboard,
-          });
+        ctx.reply("Привет! Что интересует?", { reply_markup: keyboard });
     })
 
-    let lastCtxMessage = '';
 
     bot.on('message:text', async (ctx) => {
         let text = <string>ctx?.message?.text
 
         if('Вернуться к меню' === text) {
             ctx.reply('Что интересует ?', { reply_markup: keyboard });
-            lastCtxMessage = '';
-        }
-
-        if(lastCtxMessage) {
-            switch(lastCtxMessage) {
-                case Message.other:
-                    const weather = await handleAIAnswer(await aiRequest(text));
-                    ctx.reply(weather, { reply_markup: new Keyboard().text('Вернуться к меню').resized() })
-                    return;
-                case Message.translate:
-                    const translate = await handleAIAnswer(await aiRequest(`${Message.translate} ${text}`));
-                    ctx.reply(translate, { reply_markup: keyboard });
-                    break;
-            }
-
-            lastCtxMessage = '';
         }
 
         switch(text) {
@@ -90,21 +96,24 @@ export const startBot = async (bot: Bot<Context, Api<RawApi>>) => {
                 ctx.reply(jokeValue, { reply_markup: keyboard });
                 break;
             case Message.other:
-                lastCtxMessage = Message.other;
-                const other = await handleAIAnswer(await aiRequest(text));
-                ctx.reply(other, { reply_markup: keyboard });
+                const aiAnswer = await handleAIAnswer(await aiRequest(Message.other));
+                if(aiAnswer !== aiErrorMessage) {
+                    ctx.reply(aiAnswer, { reply_markup: new Keyboard().text('🔙 Назад').resized(), parse_mode: 'Markdown'  });
+                    await ctx.conversation.enter("aiChat");
+                } else {
+                    ctx.reply(aiAnswer);
+                }
                 break;
             case Message.translate:
-                lastCtxMessage = Message.translate;
                 ctx.reply("Напишите сообщение которое хотите перевести и язык");
                 break;
         }
 
     })
 
-
     bot.on('message:photo', (ctx) => ctx.reply('Это вы на фото ?)'));
-    
+
+
     bot.start();
 
 }

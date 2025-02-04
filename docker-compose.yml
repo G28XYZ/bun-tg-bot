@@ -3,7 +3,7 @@ version: "3.8"
 services:
   bot:
     environment:
-      - configAppUrl=https://tinyurl.com/4c9xjm63
+      - configAppUrl=https://tinyurl.com/yraswyu5
     container_name: bot
     tty: true
     develop:

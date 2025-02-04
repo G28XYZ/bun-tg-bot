@@ -1,5 +1,6 @@
+import { ConversationFlavor } from '@grammyjs/conversations';
 import { startBot } from './bot.js';
-import { Bot, Context } from 'grammy';
+import { Bot, Context, Transformer } from 'grammy';
 import path from 'path';
 
 interface IConfigApp {
@@ -17,7 +18,7 @@ export const appConfig: IConfigApp = (await (await fetch(<string>process.env.con
 
 const botToken = appConfig.botToken || '';
 
-const bot = new Bot(botToken);
+const bot = new Bot<ConversationFlavor<Context>>(botToken);
 
 const latestMsg: Record<number, any> = {}
 
